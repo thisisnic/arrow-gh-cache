@@ -14,9 +14,10 @@ library(dplyr)
 
 base_url <- "https://github.com/thisisnic/arrow-gh-cache/releases/download/cache-latest"
 
-open_prs    <- read_parquet(file.path(base_url, "open_prs.parquet"))
-closed_prs  <- read_parquet(file.path(base_url, "closed_prs.parquet"))
-open_issues <- read_parquet(file.path(base_url, "open_issues.parquet"))
+open_prs      <- read_parquet(file.path(base_url, "open_prs.parquet"))
+closed_prs    <- read_parquet(file.path(base_url, "closed_prs.parquet"))
+open_issues   <- read_parquet(file.path(base_url, "open_issues.parquet"))
+closed_issues <- read_parquet(file.path(base_url, "closed_issues.parquet"))
 
 # Example: PRs merged in the last 30 days
 closed_prs |>
@@ -35,6 +36,7 @@ open_issues |>
 | `open_prs.parquet` | Open pull requests | Full (includes mergeable, additions/deletions, etc. from per-PR detail endpoint) |
 | `closed_prs.parquet` | Closed pull requests | List-level (no per-PR detail fetch; includes merged_at and merge_commit_sha) |
 | `open_issues.parquet` | Open issues (PRs excluded) | List-level |
+| `closed_issues.parquet` | Closed issues (PRs excluded) | List-level |
 
 ### Column differences
 

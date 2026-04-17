@@ -26,7 +26,6 @@ project_closed_pr <- function(pr) {
     head_sha            = pr$head$sha %||% NA_character_,
     base_ref            = pr$base$ref %||% NA_character_,
     base_sha            = pr$base$sha %||% NA_character_,
-    comments_count      = pr$comments %||% NA_integer_,
     merge_commit_sha    = pr$merge_commit_sha %||% NA_character_,
     merged_at           = parse_timestamp(pr$merged_at %||% NA_character_),
     created_at          = parse_timestamp(pr$created_at),
