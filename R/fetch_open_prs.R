@@ -15,43 +15,48 @@ fetch_pr_detail <- function(number, owner = source_owner, repo = source_repo) {
   )
 }
 
+as_chr <- function(x) if (is.null(x)) NA_character_ else as.character(x)
+as_int <- function(x) if (is.null(x)) NA_integer_ else as.integer(x)
+as_dbl <- function(x) if (is.null(x)) NA_real_    else as.double(x)
+as_lgl <- function(x) if (is.null(x)) NA          else as.logical(x)
+
 project_pr <- function(pr) {
   tibble::tibble(
-    id                    = pr$id,
-    number                = pr$number,
-    node_id               = pr$node_id,
-    state                 = pr$state,
-    title                 = pr$title,
-    body                  = pr$body %||% NA_character_,
-    draft                 = pr$draft %||% FALSE,
-    user_login            = pr$user$login %||% NA_character_,
-    author_association    = pr$author_association %||% NA_character_,
+    id                    = as_dbl(pr$id),
+    number                = as_int(pr$number),
+    node_id               = as_chr(pr$node_id),
+    state                 = as_chr(pr$state),
+    title                 = as_chr(pr$title),
+    body                  = as_chr(pr$body),
+    draft                 = as_lgl(pr$draft %||% FALSE),
+    user_login            = as_chr(pr$user$login),
+    author_association    = as_chr(pr$author_association),
     labels                = list(purrr::map_chr(pr$labels %||% list(), "name")),
     assignees             = list(purrr::map_chr(pr$assignees %||% list(), "login")),
     requested_reviewers   = list(purrr::map_chr(pr$requested_reviewers %||% list(), "login")),
-    milestone_title       = pr$milestone$title %||% NA_character_,
-    milestone_number      = pr$milestone$number %||% NA_integer_,
-    head_ref              = pr$head$ref %||% NA_character_,
-    head_sha              = pr$head$sha %||% NA_character_,
-    base_ref              = pr$base$ref %||% NA_character_,
-    base_sha              = pr$base$sha %||% NA_character_,
-    mergeable             = pr$mergeable %||% NA,
-    mergeable_state       = pr$mergeable_state %||% NA_character_,
-    rebaseable            = pr$rebaseable %||% NA,
-    additions             = pr$additions %||% NA_integer_,
-    deletions             = pr$deletions %||% NA_integer_,
-    changed_files         = pr$changed_files %||% NA_integer_,
-    commits               = pr$commits %||% NA_integer_,
-    review_comments_count = pr$review_comments %||% NA_integer_,
-    comments_count        = pr$comments %||% NA_integer_,
-    merge_commit_sha      = pr$merge_commit_sha %||% NA_character_,
-    merged                = pr$merged %||% FALSE,
-    merged_at             = pr$merged_at %||% NA_character_,
-    merged_by             = pr$merged_by$login %||% NA_character_,
-    created_at            = pr$created_at,
-    updated_at            = pr$updated_at,
-    closed_at             = pr$closed_at %||% NA_character_,
-    html_url              = pr$html_url
+    milestone_title       = as_chr(pr$milestone$title),
+    milestone_number      = as_int(pr$milestone$number),
+    head_ref              = as_chr(pr$head$ref),
+    head_sha              = as_chr(pr$head$sha),
+    base_ref              = as_chr(pr$base$ref),
+    base_sha              = as_chr(pr$base$sha),
+    mergeable             = as_lgl(pr$mergeable),
+    mergeable_state       = as_chr(pr$mergeable_state),
+    rebaseable            = as_lgl(pr$rebaseable),
+    additions             = as_dbl(pr$additions),
+    deletions             = as_dbl(pr$deletions),
+    changed_files         = as_int(pr$changed_files),
+    commits               = as_int(pr$commits),
+    review_comments_count = as_int(pr$review_comments),
+    comments_count        = as_int(pr$comments),
+    merge_commit_sha      = as_chr(pr$merge_commit_sha),
+    merged                = as_lgl(pr$merged %||% FALSE),
+    merged_at             = as_chr(pr$merged_at),
+    merged_by             = as_chr(pr$merged_by$login),
+    created_at            = as_chr(pr$created_at),
+    updated_at            = as_chr(pr$updated_at),
+    closed_at             = as_chr(pr$closed_at),
+    html_url              = as_chr(pr$html_url)
   )
 }
 
