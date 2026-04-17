@@ -9,6 +9,7 @@ source("R/config.R")
 source("R/fetch_open_prs.R")
 source("R/fetch_closed_prs.R")
 source("R/fetch_open_issues.R")
+source("R/fetch_closed_issues.R")
 
 fs::dir_create("artifacts")
 
@@ -55,4 +56,14 @@ if (download_asset("open_issues.parquet")) {
   open_issues <- build_open_issues_table()
   write_parquet(open_issues, "artifacts/open_issues.parquet")
   cli_inform("Wrote {nrow(open_issues)} rows to artifacts/open_issues.parquet")
+}
+
+# --- closed_issues ---
+if (download_asset("closed_issues.parquet")) {
+  cli_inform("closed_issues.parquet already exists in release, skipping fetch")
+} else {
+  cli_inform("Building closed_issues table from {source_owner}/{source_repo}")
+  closed_issues <- build_closed_issues_table()
+  write_parquet(closed_issues, "artifacts/closed_issues.parquet")
+  cli_inform("Wrote {nrow(closed_issues)} rows to artifacts/closed_issues.parquet")
 }
