@@ -1,0 +1,15 @@
+Package: arrow.gh.cache
+Title: GitHub API Cache for apache/arrow
+Version: 0.0.1
+Description: Builds a parquet-format cache of issues, pull requests, and
+    comments from the apache/arrow repository. Writes are published as
+    assets on the cache-latest GitHub Release of this repo.
+Encoding: UTF-8
+Imports:
+    arrow,
+    cli,
+    dplyr,
+    fs,
+    gh,
+    purrr,
+    tibble
