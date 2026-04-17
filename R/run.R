@@ -110,10 +110,12 @@ if (all_exist) {
   )
 
   items <- fetch_updated_since(since)
-  cli_inform("Got {length(items)} updated items")
 
   if (length(items) > 0) {
     is_pr <- map_lgl(items, ~ !is.null(.x$pull_request))
+    n_prs <- sum(is_pr)
+    n_issues <- sum(!is_pr)
+    cli_inform("Delta: {length(items)} updated items ({n_prs} PRs, {n_issues} issues)")
 
     # --- Process updated PRs ---
     pr_items <- items[is_pr]
@@ -148,6 +150,7 @@ if (all_exist) {
 
       if (length(updated_open) > 0) {
         new_open_prs <- bind_rows(updated_open)
+        cli_inform("  Updated {nrow(new_open_prs)} open PRs")
         # Remove any that moved to closed
         open_prs <- open_prs |> filter(!number %in% closed_prs$number)
         open_prs <- merge_by_number(open_prs, new_open_prs)
@@ -155,6 +158,7 @@ if (all_exist) {
 
       if (length(updated_closed) > 0) {
         new_closed_prs <- bind_rows(updated_closed)
+        cli_inform("  Updated {nrow(new_closed_prs)} closed PRs")
         # Remove from open_prs any that are now closed
         open_prs <- open_prs |> filter(!number %in% new_closed_prs$number)
         closed_prs <- merge_by_number(closed_prs, new_closed_prs)
@@ -178,6 +182,7 @@ if (all_exist) {
 
       if (length(updated_open_issues) > 0) {
         new_open <- bind_rows(updated_open_issues)
+        cli_inform("  Updated {nrow(new_open)} open issues")
         open_issues <- open_issues |> filter(!number %in% new_open$number)
         # Also remove any that were reopened from closed
         closed_issues <- closed_issues |> filter(!number %in% new_open$number)
@@ -186,11 +191,14 @@ if (all_exist) {
 
       if (length(updated_closed_issues) > 0) {
         new_closed <- bind_rows(updated_closed_issues)
+        cli_inform("  Updated {nrow(new_closed)} closed issues")
         # Remove from open any that are now closed
         open_issues <- open_issues |> filter(!number %in% new_closed$number)
         closed_issues <- merge_by_number(closed_issues, new_closed)
       }
     }
+  } else {
+    cli_inform("No changes since last run")
   }
 }
 
