@@ -49,6 +49,12 @@ fetch_updated_since <- function(since) {
 # Merge updated rows into an existing table, deduping by number
 merge_by_number <- function(existing, updated) {
   if (nrow(updated) == 0) return(existing)
+  # Parquet round-tripping makes list columns typed (list<character>);
+  # newly built rows have plain lists. Coerce to plain lists so bind_rows works.
+  list_cols <- names(existing)[vapply(existing, is.list, logical(1))]
+  for (col in list_cols) {
+    existing[[col]] <- as.list(existing[[col]])
+  }
   existing |>
     filter(!number %in% updated$number) |>
     bind_rows(updated)
