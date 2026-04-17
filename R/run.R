@@ -11,6 +11,8 @@ source("R/fetch_open_prs.R")
 source("R/fetch_closed_prs.R")
 source("R/fetch_open_issues.R")
 source("R/fetch_closed_issues.R")
+source("R/fetch_issue_comments.R")
+source("R/fetch_review_comments.R")
 
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
@@ -65,10 +67,12 @@ merge_by_number <- function(existing, updated) {
 # ---------------------------------------------------------------------------
 
 cli_inform("Downloading existing assets from release...")
-open_prs      <- download_asset("open_prs.parquet")
-closed_prs    <- download_asset("closed_prs.parquet")
-open_issues   <- download_asset("open_issues.parquet")
-closed_issues <- download_asset("closed_issues.parquet")
+open_prs        <- download_asset("open_prs.parquet")
+closed_prs      <- download_asset("closed_prs.parquet")
+open_issues     <- download_asset("open_issues.parquet")
+closed_issues   <- download_asset("closed_issues.parquet")
+issue_comments  <- download_asset("issue_comments.parquet")
+review_comments <- download_asset("review_comments.parquet")
 
 all_exist <- !is.null(open_prs) && !is.null(closed_prs) &&
              !is.null(open_issues) && !is.null(closed_issues)
@@ -95,6 +99,16 @@ if (is.null(open_issues)) {
 if (is.null(closed_issues)) {
   cli_inform("Backfilling closed_issues...")
   closed_issues <- build_closed_issues_table()
+}
+
+if (is.null(issue_comments)) {
+  cli_inform("Backfilling issue_comments...")
+  issue_comments <- build_issue_comments_table()
+}
+
+if (is.null(review_comments)) {
+  cli_inform("Backfilling review_comments...")
+  review_comments <- build_review_comments_table()
 }
 
 # ---------------------------------------------------------------------------
@@ -200,6 +214,32 @@ if (all_exist) {
   } else {
     cli_inform("No changes since last run")
   }
+
+  # --- Delta update comments ---
+  comment_since <- max(
+    max(issue_comments$updated_at, na.rm = TRUE),
+    max(review_comments$updated_at, na.rm = TRUE)
+  )
+
+  new_ic <- build_issue_comments_table(since = comment_since)
+  if (nrow(new_ic) > 0) {
+    cli_inform("  Updated {nrow(new_ic)} issue comments")
+    list_cols <- names(issue_comments)[vapply(issue_comments, is.list, logical(1))]
+    for (col in list_cols) issue_comments[[col]] <- as.list(issue_comments[[col]])
+    issue_comments <- issue_comments |>
+      filter(!id %in% new_ic$id) |>
+      bind_rows(new_ic)
+  }
+
+  new_rc <- build_review_comments_table(since = comment_since)
+  if (nrow(new_rc) > 0) {
+    cli_inform("  Updated {nrow(new_rc)} review comments")
+    list_cols <- names(review_comments)[vapply(review_comments, is.list, logical(1))]
+    for (col in list_cols) review_comments[[col]] <- as.list(review_comments[[col]])
+    review_comments <- review_comments |>
+      filter(!id %in% new_rc$id) |>
+      bind_rows(new_rc)
+  }
 }
 
 # ---------------------------------------------------------------------------
@@ -217,3 +257,9 @@ cli_inform("Wrote {nrow(open_issues)} rows to open_issues.parquet")
 
 write_parquet(closed_issues, "artifacts/closed_issues.parquet")
 cli_inform("Wrote {nrow(closed_issues)} rows to closed_issues.parquet")
+
+write_parquet(issue_comments, "artifacts/issue_comments.parquet")
+cli_inform("Wrote {nrow(issue_comments)} rows to issue_comments.parquet")
+
+write_parquet(review_comments, "artifacts/review_comments.parquet")
+cli_inform("Wrote {nrow(review_comments)} rows to review_comments.parquet")
