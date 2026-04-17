@@ -21,9 +21,9 @@ project_issue <- function(issue) {
     milestone_title    = issue$milestone$title %||% NA_character_,
     milestone_number   = issue$milestone$number %||% NA_integer_,
     comments_count     = issue$comments %||% NA_integer_,
-    created_at         = issue$created_at,
-    updated_at         = issue$updated_at,
-    closed_at          = issue$closed_at %||% NA_character_,
+    created_at         = parse_timestamp(issue$created_at),
+    updated_at         = parse_timestamp(issue$updated_at),
+    closed_at          = parse_timestamp(issue$closed_at %||% NA_character_),
     html_url           = issue$html_url
   )
 }

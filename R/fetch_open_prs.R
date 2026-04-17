@@ -46,11 +46,11 @@ project_pr <- function(pr) {
     comments_count        = pr$comments %||% NA_integer_,
     merge_commit_sha      = pr$merge_commit_sha %||% NA_character_,
     merged                = pr$merged %||% FALSE,
-    merged_at             = pr$merged_at %||% NA_character_,
+    merged_at             = parse_timestamp(pr$merged_at %||% NA_character_),
     merged_by             = pr$merged_by$login %||% NA_character_,
-    created_at            = pr$created_at,
-    updated_at            = pr$updated_at,
-    closed_at             = pr$closed_at %||% NA_character_,
+    created_at            = parse_timestamp(pr$created_at),
+    updated_at            = parse_timestamp(pr$updated_at),
+    closed_at             = parse_timestamp(pr$closed_at %||% NA_character_),
     html_url              = pr$html_url
   )
 }
