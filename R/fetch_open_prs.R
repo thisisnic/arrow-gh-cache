@@ -1,5 +1,9 @@
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
+parse_ts <- function(x) {
+  as.POSIXct(x, format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+}
+
 fetch_open_prs_list <- function(owner = source_owner, repo = source_repo) {
   gh::gh(
     "GET /repos/{owner}/{repo}/pulls",
@@ -15,48 +19,43 @@ fetch_pr_detail <- function(number, owner = source_owner, repo = source_repo) {
   )
 }
 
-as_chr <- function(x) if (is.null(x)) NA_character_ else as.character(x)
-as_int <- function(x) if (is.null(x)) NA_integer_ else as.integer(x)
-as_dbl <- function(x) if (is.null(x)) NA_real_    else as.double(x)
-as_lgl <- function(x) if (is.null(x)) NA          else as.logical(x)
-
-project_pr <- function(pr) {
+project_prs <- function(raw) {
   tibble::tibble(
-    id                    = as_dbl(pr$id),
-    number                = as_int(pr$number),
-    node_id               = as_chr(pr$node_id),
-    state                 = as_chr(pr$state),
-    title                 = as_chr(pr$title),
-    body                  = as_chr(pr$body),
-    draft                 = as_lgl(pr$draft %||% FALSE),
-    user_login            = as_chr(pr$user$login),
-    author_association    = as_chr(pr$author_association),
-    labels                = list(purrr::map_chr(pr$labels %||% list(), "name")),
-    assignees             = list(purrr::map_chr(pr$assignees %||% list(), "login")),
-    requested_reviewers   = list(purrr::map_chr(pr$requested_reviewers %||% list(), "login")),
-    milestone_title       = as_chr(pr$milestone$title),
-    milestone_number      = as_int(pr$milestone$number),
-    head_ref              = as_chr(pr$head$ref),
-    head_sha              = as_chr(pr$head$sha),
-    base_ref              = as_chr(pr$base$ref),
-    base_sha              = as_chr(pr$base$sha),
-    mergeable             = as_lgl(pr$mergeable),
-    mergeable_state       = as_chr(pr$mergeable_state),
-    rebaseable            = as_lgl(pr$rebaseable),
-    additions             = as_dbl(pr$additions),
-    deletions             = as_dbl(pr$deletions),
-    changed_files         = as_int(pr$changed_files),
-    commits               = as_int(pr$commits),
-    review_comments_count = as_int(pr$review_comments),
-    comments_count        = as_int(pr$comments),
-    merge_commit_sha      = as_chr(pr$merge_commit_sha),
-    merged                = as_lgl(pr$merged %||% FALSE),
-    merged_at             = as_chr(pr$merged_at),
-    merged_by             = as_chr(pr$merged_by$login),
-    created_at            = as_chr(pr$created_at),
-    updated_at            = as_chr(pr$updated_at),
-    closed_at             = as_chr(pr$closed_at),
-    html_url              = as_chr(pr$html_url)
+    id                    = purrr::map_dbl(raw, "id"),
+    number                = purrr::map_int(raw, "number"),
+    node_id               = purrr::map_chr(raw, "node_id"),
+    state                 = purrr::map_chr(raw, "state"),
+    title                 = purrr::map_chr(raw, "title"),
+    body                  = purrr::map_chr(raw, ~ .x$body %||% NA_character_),
+    draft                 = purrr::map_lgl(raw, ~ .x$draft %||% NA),
+    user_login            = purrr::map_chr(raw, ~ .x$user$login %||% NA_character_),
+    author_association    = purrr::map_chr(raw, ~ .x$author_association %||% NA_character_),
+    labels                = purrr::map(raw, ~ purrr::map_chr(.x$labels %||% list(), "name")),
+    assignees             = purrr::map(raw, ~ purrr::map_chr(.x$assignees %||% list(), "login")),
+    requested_reviewers   = purrr::map(raw, ~ purrr::map_chr(.x$requested_reviewers %||% list(), "login")),
+    milestone_title       = purrr::map_chr(raw, ~ .x$milestone$title %||% NA_character_),
+    milestone_number      = purrr::map_int(raw, ~ .x$milestone$number %||% NA_integer_),
+    head_ref              = purrr::map_chr(raw, ~ .x$head$ref %||% NA_character_),
+    head_sha              = purrr::map_chr(raw, ~ .x$head$sha %||% NA_character_),
+    base_ref              = purrr::map_chr(raw, ~ .x$base$ref %||% NA_character_),
+    base_sha              = purrr::map_chr(raw, ~ .x$base$sha %||% NA_character_),
+    mergeable             = purrr::map_lgl(raw, ~ as.logical(.x$mergeable %||% NA)),
+    mergeable_state       = purrr::map_chr(raw, ~ .x$mergeable_state %||% NA_character_),
+    rebaseable            = purrr::map_lgl(raw, ~ as.logical(.x$rebaseable %||% NA)),
+    additions             = purrr::map_dbl(raw, ~ .x$additions %||% NA_real_),
+    deletions             = purrr::map_dbl(raw, ~ .x$deletions %||% NA_real_),
+    changed_files         = purrr::map_int(raw, ~ .x$changed_files %||% NA_integer_),
+    commits               = purrr::map_int(raw, ~ .x$commits %||% NA_integer_),
+    review_comments_count = purrr::map_int(raw, ~ .x$review_comments %||% NA_integer_),
+    comments_count        = purrr::map_int(raw, ~ .x$comments %||% NA_integer_),
+    merge_commit_sha      = purrr::map_chr(raw, ~ .x$merge_commit_sha %||% NA_character_),
+    merged                = purrr::map_lgl(raw, ~ .x$merged %||% FALSE),
+    merged_at             = parse_ts(purrr::map_chr(raw, ~ .x$merged_at %||% NA_character_)),
+    merged_by             = purrr::map_chr(raw, ~ .x$merged_by$login %||% NA_character_),
+    created_at            = parse_ts(purrr::map_chr(raw, "created_at")),
+    updated_at            = parse_ts(purrr::map_chr(raw, "updated_at")),
+    closed_at             = parse_ts(purrr::map_chr(raw, ~ .x$closed_at %||% NA_character_)),
+    html_url              = purrr::map_chr(raw, "html_url")
   )
 }
 
@@ -64,13 +63,13 @@ build_open_prs_table <- function(sleep = 0.1) {
   listing <- fetch_open_prs_list()
   cli::cli_inform("List endpoint returned {length(listing)} open PRs")
 
-  purrr::map_dfr(seq_along(listing), function(i) {
-    pr <- listing[[i]]
+  merged <- purrr::imap(listing, function(pr, i) {
     Sys.sleep(sleep)
-    detail <- fetch_pr_detail(pr$number)
     if ((i %% 50) == 0) {
       cli::cli_inform("  ... detail fetched for {i}/{length(listing)}")
     }
-    project_pr(utils::modifyList(pr, detail))
+    utils::modifyList(pr, fetch_pr_detail(pr$number))
   })
+
+  project_prs(merged)
 }
