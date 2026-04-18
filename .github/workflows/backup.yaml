@@ -1,0 +1,32 @@
+name: Quarterly backup
+
+on:
+  schedule:
+    - cron: '0 0 1 1,4,7,10 *'  # 1st of Jan, Apr, Jul, Oct
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create backup
+        run: |
+          TAG="backup-$(date +%Y-%m-%d)"
+          mkdir -p backup
+
+          # Download current assets
+          gh release download cache-latest --dir backup
+
+          # Create dated backup release (never overwrites previous backups)
+          gh release create "$TAG" backup/*.parquet \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Backup $TAG" \
+            --notes "Quarterly snapshot of cache-latest assets. Restore by uploading these to cache-latest with --clobber."
+          echo "Created backup release: $TAG"
