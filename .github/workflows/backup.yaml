@@ -27,6 +27,7 @@ jobs:
           # Create dated backup release (never overwrites previous backups)
           gh release create "$TAG" backup/*.parquet \
             --repo "$GITHUB_REPOSITORY" \
-            --title "Backup $TAG" \
-            --notes "Quarterly snapshot of cache-latest assets. Restore by uploading these to cache-latest with --clobber."
+            --title "Backup $(date +%Y-%m-%d)" \
+            --notes "Quarterly snapshot of cache-latest assets. Restore by uploading these to cache-latest with --clobber." \
+            --latest=false
           echo "Created backup release: $TAG"
