@@ -14,26 +14,11 @@ source("R/fetch_closed_issues.R")
 source("R/fetch_issue_comments.R")
 source("R/fetch_review_comments.R")
 
-`%||%` <- function(x, y) if (is.null(x)) y else x
-
 fs::dir_create("artifacts")
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-download_asset <- function(filename) {
-  dest <- file.path("artifacts", filename)
-  repo <- Sys.getenv("GITHUB_REPOSITORY", "thisisnic/arrow-gh-cache")
-  system2(
-    "gh", c("release", "download", release_tag,
-            "--repo", repo,
-            "--pattern", filename,
-            "--dir", "artifacts"),
-    stdout = FALSE, stderr = FALSE
-  )
-  if (file.exists(dest)) read_parquet(dest) else NULL
-}
 
 # Fetch all items (issues + PRs) updated since `since` via the /issues endpoint
 fetch_updated_since <- function(since) {
